@@ -60,7 +60,7 @@ extension UserDetailsController{
         // #warning Incomplete implementation, return the number of sections
         return 1
     }
-
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
         return 16
@@ -170,7 +170,7 @@ extension UserDetailsController: MKMapViewDelegate {
         let lan = Double(user?.location?.coordinates?.latitude ?? "") ?? 0
         let lon = Double(user?.location?.coordinates?.longitude ?? "") ?? 0
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.showPinInMap(location, self.user?.location?.country ?? "", lan, lon)
         }
     }
@@ -187,7 +187,7 @@ extension UserDetailsController {
         view.backgroundColor = Config.white
         
         // add a bottom margin to tableview
-        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 60, right: 0)
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 50, right: 0)
         
         // Set lblPersonalInfoHeader
         lblPersonalInfoHeader.text = "Personal Information".uppercased()

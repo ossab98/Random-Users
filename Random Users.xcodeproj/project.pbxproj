@@ -12,10 +12,10 @@
 		6F4F5F6A267E7467001A5B09 /* UIViewController-Extention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4F5F69267E7467001A5B09 /* UIViewController-Extention.swift */; };
 		6F4F5F6C267E7A16001A5B09 /* String-Extention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4F5F6B267E7A16001A5B09 /* String-Extention.swift */; };
 		6F4F5F6F267E8E61001A5B09 /* UserDetailsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4F5F6E267E8E61001A5B09 /* UserDetailsController.swift */; };
+		6F8CC7C8267FD51300C66D50 /* ProductManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F8CC7C7267FD51300C66D50 /* ProductManager.swift */; };
 		6FD0F91A267D57D800F7301B /* CollectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD0F919267D57D800F7301B /* CollectionController.swift */; };
 		6FD0F91C267D57E700F7301B /* CollectionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD0F91B267D57E700F7301B /* CollectionCell.swift */; };
 		6FD0F91E267D5CCA00F7301B /* UICollectionView-Extention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD0F91D267D5CCA00F7301B /* UICollectionView-Extention.swift */; };
-		6FD0F920267D5E1900F7301B /* Public-Extentions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD0F91F267D5E1900F7301B /* Public-Extentions.swift */; };
 		6FDE2F1A267CD4070082FE21 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE2F19267CD4070082FE21 /* AppDelegate.swift */; };
 		6FDE2F1C267CD4070082FE21 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE2F1B267CD4070082FE21 /* SceneDelegate.swift */; };
 		6FDE2F1E267CD4070082FE21 /* HomeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDE2F1D267CD4070082FE21 /* HomeController.swift */; };
@@ -56,10 +56,10 @@
 		6F4F5F69267E7467001A5B09 /* UIViewController-Extention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController-Extention.swift"; sourceTree = "<group>"; };
 		6F4F5F6B267E7A16001A5B09 /* String-Extention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String-Extention.swift"; sourceTree = "<group>"; };
 		6F4F5F6E267E8E61001A5B09 /* UserDetailsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDetailsController.swift; sourceTree = "<group>"; };
+		6F8CC7C7267FD51300C66D50 /* ProductManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductManager.swift; sourceTree = "<group>"; };
 		6FD0F919267D57D800F7301B /* CollectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionController.swift; sourceTree = "<group>"; };
 		6FD0F91B267D57E700F7301B /* CollectionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionCell.swift; sourceTree = "<group>"; };
 		6FD0F91D267D5CCA00F7301B /* UICollectionView-Extention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UICollectionView-Extention.swift"; sourceTree = "<group>"; };
-		6FD0F91F267D5E1900F7301B /* Public-Extentions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Public-Extentions.swift"; sourceTree = "<group>"; };
 		6FDE2F16267CD4070082FE21 /* Random Users.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Random Users.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FDE2F19267CD4070082FE21 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6FDE2F1B267CD4070082FE21 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -178,6 +178,7 @@
 			isa = PBXGroup;
 			children = (
 				6FDE2F3C267CD5690082FE21 /* Config.swift */,
+				6F8CC7C7267FD51300C66D50 /* ProductManager.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -189,7 +190,6 @@
 				6FDE2F40267CD5690082FE21 /* UIActivityIndicator-Extention.swift */,
 				6FDE2F41267CD5690082FE21 /* UITableView-Extention.swift */,
 				6FD0F91D267D5CCA00F7301B /* UICollectionView-Extention.swift */,
-				6FD0F91F267D5E1900F7301B /* Public-Extentions.swift */,
 				6F4F5F67267E6F16001A5B09 /* MapKit-Extention.swift */,
 				6F4F5F69267E7467001A5B09 /* UIViewController-Extention.swift */,
 				6F4F5F6B267E7A16001A5B09 /* String-Extention.swift */,
@@ -416,13 +416,13 @@
 				6FDE2FA1267D223C0082FE21 /* Street.swift in Sources */,
 				6FD0F91C267D57E700F7301B /* CollectionCell.swift in Sources */,
 				6FDE2F9F267D223C0082FE21 /* Login.swift in Sources */,
+				6F8CC7C8267FD51300C66D50 /* ProductManager.swift in Sources */,
 				6FDE2F46267CD5690082FE21 /* UITableView-Extention.swift in Sources */,
 				6FDE2FA4267D223C0082FE21 /* Timezone.swift in Sources */,
 				6F4F5F6A267E7467001A5B09 /* UIViewController-Extention.swift in Sources */,
 				6FDE2FA6267D223C0082FE21 /* Results.swift in Sources */,
 				6FDE2F4B267CFDC70082FE21 /* TableController.swift in Sources */,
 				6FDE2F45267CD5690082FE21 /* UIActivityIndicator-Extention.swift in Sources */,
-				6FD0F920267D5E1900F7301B /* Public-Extentions.swift in Sources */,
 				6FDE2FA2267D223C0082FE21 /* UserModel.swift in Sources */,
 				6FDE2F1C267CD4070082FE21 /* SceneDelegate.swift in Sources */,
 				6FDE2F42267CD5690082FE21 /* Config.swift in Sources */,

@@ -8,7 +8,7 @@
 import UIKit
 
 class TableController: UIViewController, UITextFieldDelegate {
-
+    
     // MARK:- Outlets
     // TableView
     @IBOutlet weak var tableView: UITableView!
@@ -30,7 +30,7 @@ class TableController: UIViewController, UITextFieldDelegate {
     
     
     // MARK: - Properties / Models
-    let networkHandler = NetworkHandler()
+    let productManager = ProductManager()
     var info: Info!
     var results: [Results] = []
     
@@ -101,7 +101,9 @@ extension TableController: UITableViewDelegate, UITableViewDataSource, UIScrollV
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        //print("tableView", info.page ?? 0)
+        let currentPage: Int = (indexPath.row / per_page) + 1
+        lblCurrentPage.isHidden = false
+        lblCurrentPage.text = "Page: \(currentPage.description)"
     }
     
 }
@@ -117,10 +119,6 @@ extension TableController {
         } else {
             navigationController?.setNavigationBarHidden(false, animated: true)
         }
-        
-        lblCurrentPage.isHidden = false
-        lblCurrentPage.text = "Page: \(info?.page ?? 1)"
-        print("scrollView Ciao", info.page ?? 0)
     }
     
     // scrollViewDidEndDragging
@@ -169,7 +167,7 @@ extension TableController {
     }
     
     // Reload the tableView
-    func reloadTableView(){
+    func reloadView(){
         DispatchQueue.main.async {
             self.tableView.updateEmptyState(rowsCount: self.arraySorted().count, emptyMessage: "No data found!")
             self.tableView.reloadData()
@@ -190,15 +188,14 @@ extension TableController {
         // Clear Data
         self.restData()
         // Reload View
-        self.reloadTableView()
+        self.reloadView()
         // Get new data
         self.getData()
         // End Refreshing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2 ) {
             self.refreshControl.endRefreshing()
         }
-        // Scroll To top
-        self.tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
+        
     }
     
     // Call API to get Data
@@ -208,7 +205,7 @@ extension TableController {
                 self.callAPI()
             }else{
                 self.alert(title: "Error", message: "Not connected to the internet. Please check your internet connection.", preferredStyle: .alert) {_ in
-                    self.reloadTableView()
+                    self.reloadView()
                 }
             }
         }
@@ -221,16 +218,16 @@ extension TableController {
             self.view.startLoading()
         }
         
-        // call API
         let path = "?page=\(self.page)&results=\(per_page)"
-        networkHandler.postData(urlPath: path, method: .get, with: UserModel.self , parameters: .none, returnWithData: {[weak self](response) in
+        productManager.getRandomUsers(urlPath: path) {[weak self](response) in
             
             DispatchQueue.main.async {
-                // Stop animation
+                // Strat animation
                 self?.view.stopLoading()
             }
             
-            guard let self = self , let data = response else {return}
+            guard let self = self else {return}
+            let data = response
             
             // MARK:- If you want infinity pagination you can replace "self.page >= 5" To "data.results?.count ?? 0 < self.per_page" to get a  infinity users..
             // infinity pagination / max 100 users
@@ -244,19 +241,18 @@ extension TableController {
             }
             
             // Reload View
-            self.reloadTableView()
+            self.reloadView()
             
-        }, returnError: {[weak self](error) in
+        } onError: { [weak self](error) in
             self?.view.stopLoading()
             // Show error message
             self?.alert(title: "Error", message: error?.localizedDescription ?? "Ops, something went wrong try again later.", preferredStyle: .alert, completion:{_ in})
-        })
+        }
     }
     
 }
 
 
- 
 //MARK:- Search
 extension TableController {
     // Function to filter Array by...
@@ -266,26 +262,32 @@ extension TableController {
         }else{
             return results.filter({
                 $0.gender?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.name?.title?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.name?.first?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.name?.last?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.location?.street?.name?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.location?.city?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.location?.state?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.location?.country?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
-                $0.email?.uppercased().contains(searchField.text!.uppercased()) ?? false
+                $0.location?.timezone?.description?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.email?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.login?.username?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.phone?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.cell?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.nat?.uppercased().contains(searchField.text!.uppercased()) ?? false
             })
         }
     }
     
     // Reload tableView when writing
     @IBAction func searchTextField(_ sender: UITextField) {
-        reloadTableView()
+        reloadView()
     }
     
     // Reload tableView when cancell all text
     func textFieldShouldClear(_ textField: UITextField) -> Bool {
         searchField.text = ""
-        reloadTableView()
+        reloadView()
         return false
     }
     
@@ -293,16 +295,16 @@ extension TableController {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         searchField.returnKeyType = .search
-        reloadTableView()
+        reloadView()
         return true
     }
     
     // textFieldDidBeginEditing
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        reloadTableView()
+        reloadView()
     }
 }
- 
+
 
 // MARK:- SetUpView
 extension TableController {
@@ -316,7 +318,7 @@ extension TableController {
         tableView.dataSource = self
         tableView.backgroundColor = .clear
         // add a bottom margin to tableview
-        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 60, right: 0)
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 50, right: 0)
         
         // Set Search View
         searchView.backgroundColor = Config.darkGray

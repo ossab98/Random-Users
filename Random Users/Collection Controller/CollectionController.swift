@@ -30,7 +30,7 @@ class CollectionController: UIViewController, UITextFieldDelegate {
     
     
     // MARK: - Properties / Models
-    let networkHandler = NetworkHandler()
+    let productManager = ProductManager()
     var info: Info!
     var results: [Results] = []
     
@@ -79,7 +79,6 @@ extension CollectionController: UICollectionViewDelegate, UICollectionViewDataSo
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "collectionCell", for: indexPath) as! CollectionCell
-        
         cell.collectionController = self
         cell.user = arraySorted()[indexPath.row]
         cell.setUpCell()
@@ -88,11 +87,15 @@ extension CollectionController: UICollectionViewDelegate, UICollectionViewDataSo
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         self.view.endEditing(true)
-        
         // Push To UserDetailsController
         let UserDetailsVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "userDetailsController") as! UserDetailsController
         UserDetailsVC.user = arraySorted()[indexPath.row]
         self.navigationController?.pushViewController(UserDetailsVC, animated: true)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        let currentPage: Int = (indexPath.row / per_page) + 1
+        lblCurrentPage.text = "Page: \(currentPage.description)"
     }
     
 }
@@ -108,10 +111,6 @@ extension CollectionController {
         } else {
             navigationController?.setNavigationBarHidden(false, animated: true)
         }
-        
-        lblCurrentPage.isHidden = false
-        lblCurrentPage.text = "Page: \(info?.page ?? 0 + 1)"
-        print("scrollView Ciao", info.page ?? 0)
     }
     
     // scrollViewDidEndDragging
@@ -159,7 +158,7 @@ extension CollectionController {
     }
     
     // Reload the CollectionView
-    func reloadCollectionView(){
+    func reloadView(){
         DispatchQueue.main.async {
             self.collectionView.updateEmptyState(rowsCount: self.arraySorted().count, emptyMessage: "No data found!")
             self.collectionView.reloadData()
@@ -169,7 +168,7 @@ extension CollectionController {
     // refresh
     func refreshCollectionView(){
         refreshControl.attributedTitle = NSAttributedString(string: "Reload",
-                                                            attributes: [NSAttributedString.Key.foregroundColor: Config.orange!])
+        attributes: [NSAttributedString.Key.foregroundColor: Config.orange!])
         refreshControl.tintColor = Config.orange
         refreshControl.addTarget(self, action: #selector(self.refresh(_:)), for: .valueChanged)
         collectionView.addSubview(refreshControl)
@@ -180,15 +179,13 @@ extension CollectionController {
         // Clear Data
         self.restData()
         // Reload View
-        self.reloadCollectionView()
+        self.reloadView()
         // Get new data
         self.getData()
         // End Refreshing
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2 ) {
             self.refreshControl.endRefreshing()
         }
-        // Scroll To top
-        self.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
     }
     
     // Call API to get Data
@@ -198,7 +195,7 @@ extension CollectionController {
                 self.callAPI()
             }else{
                 self.alert(title: "Sorry!", message: "Not connected to the internet. Please check your internet connection.", preferredStyle: .alert) {_ in
-                    self.reloadCollectionView()
+                    self.reloadView()
                 }
             }
         }
@@ -211,16 +208,14 @@ extension CollectionController {
             self.view.startLoading()
         }
         
-        // call API
-        let path = "?page=\(self.page)&results=\(per_page)"
-        networkHandler.postData(urlPath: path, method: .get, with: UserModel.self , parameters: .none, returnWithData: {[weak self](response) in
-            
+        productManager.getRandomUsers(urlPath: "?page=\(self.page)&results=\(per_page)") {[weak self](response) in
             DispatchQueue.main.async {
-                // Stop animation
+                // Strat animation
                 self?.view.stopLoading()
             }
             
-            guard let self = self , let data = response else {return}
+            guard let self = self else {return}
+            let data = response
             
             // MARK:- If you want infinity pagination you can replace "self.page >= 5" To "data.results?.count ?? 0 < self.per_page" to get a  infinity users..
             // infinity pagination / max 100 users
@@ -234,13 +229,13 @@ extension CollectionController {
             }
             
             // Reload View
-            self.reloadCollectionView()
+            self.reloadView()
             
-        }, returnError: {[weak self](error) in
+        } onError: { [weak self](error) in
             self?.view.stopLoading()
             // Show error message
-            self?.alert(title: "Sorry!", message: error?.localizedDescription ?? "Ops, something went wrong try again later.", preferredStyle: .alert, completion:{_ in})
-        })
+            self?.alert(title: "Error", message: error?.localizedDescription ?? "Ops, something went wrong try again later.", preferredStyle: .alert, completion:{ _ in })
+        }
     }
     
 }
@@ -256,26 +251,32 @@ extension CollectionController {
         }else{
             return results.filter({
                 $0.gender?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.name?.title?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.name?.first?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.name?.last?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.location?.street?.name?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.location?.city?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.location?.state?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
                 $0.location?.country?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
-                $0.email?.uppercased().contains(searchField.text!.uppercased()) ?? false
+                $0.location?.timezone?.description?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.email?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.login?.username?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.phone?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.cell?.uppercased().contains(searchField.text!.uppercased()) ?? false ||
+                $0.nat?.uppercased().contains(searchField.text!.uppercased()) ?? false
             })
         }
     }
     
     // Reload tableView when writing
     @IBAction func searchTextField(_ sender: UITextField) {
-        reloadCollectionView()
+        reloadView()
     }
     
     // Reload tableView when cancell all text
     func textFieldShouldClear(_ textField: UITextField) -> Bool {
         searchField.text = ""
-        reloadCollectionView()
+        reloadView()
         return false
     }
     
@@ -283,13 +284,13 @@ extension CollectionController {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         searchField.returnKeyType = .search
-        reloadCollectionView()
+        reloadView()
         return true
     }
     
     // textFieldDidBeginEditing
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        reloadCollectionView()
+        reloadView()
     }
 }
 
@@ -306,7 +307,7 @@ extension CollectionController {
         collectionView.dataSource = self
         collectionView.backgroundColor = .clear
         // add a bottom margin to collectionView
-        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 60, right: 0)
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 50, right: 0)
         
         // Declare number of cells you want per row - Dynamic cells
         if let flowLayout = collectionView?.collectionViewLayout as? UICollectionViewFlowLayout {
@@ -350,7 +351,6 @@ extension CollectionController {
         
         // Set lblCurrentPage
         view.addSubview(lblCurrentPage)
-        lblCurrentPage.isHidden = true
         lblCurrentPage.layer.masksToBounds = true
         lblCurrentPage.layer.cornerRadius = Config.cornerRadius
         lblCurrentPage.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 0).isActive = true
