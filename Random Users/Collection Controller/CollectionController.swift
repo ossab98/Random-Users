@@ -17,6 +17,17 @@ class CollectionController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var searchImg: UIImageView!
     @IBOutlet weak var searchField: UITextField!
     
+    private let lblCurrentPage: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.backgroundColor = Config.orange
+        label.textColor = Config.darkGray
+        label.font = medium(Config.subhead)
+        label.textAlignment = NSTextAlignment.center
+        label.numberOfLines = 1
+        return label
+    }()
+    
     
     // MARK: - Properties / Models
     let networkHandler = NetworkHandler()
@@ -28,7 +39,7 @@ class CollectionController: UIViewController, UITextFieldDelegate {
     
     // Pagination variables
     var page: Int = 1
-    var per_page: Int = 10
+    var per_page: Int = 25
     var isLimit: Bool = false
     
     
@@ -46,6 +57,10 @@ class CollectionController: UIViewController, UITextFieldDelegate {
         // Set Navigation Title
         navigationItem.title = "Collection"
         navigationItem.backButtonTitle = " "
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
     }
     
 }
@@ -80,7 +95,11 @@ extension CollectionController: UICollectionViewDelegate, UICollectionViewDataSo
         self.navigationController?.pushViewController(UserDetailsVC, animated: true)
     }
     
-    //MARK:- Pagination to get new data
+}
+
+
+//MARK:- Pagination to get new data - UIScrollView
+extension CollectionController {
     
     // Hide NavigationBar when scrolling
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -90,6 +109,9 @@ extension CollectionController: UICollectionViewDelegate, UICollectionViewDataSo
             navigationController?.setNavigationBarHidden(false, animated: true)
         }
         
+        lblCurrentPage.isHidden = false
+        lblCurrentPage.text = "Page: \(info?.page ?? 0 + 1)"
+        print("scrollView Ciao", info.page ?? 0)
     }
     
     // scrollViewDidEndDragging
@@ -121,8 +143,6 @@ extension CollectionController: UICollectionViewDelegate, UICollectionViewDataSo
             self.getData()
         }
     }
-    
-    
 }
 
 
@@ -164,10 +184,11 @@ extension CollectionController {
         // Get new data
         self.getData()
         // End Refreshing
-        DispatchQueue.main.asyncAfter(deadline: .now()) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             self.refreshControl.endRefreshing()
         }
-        
+        // Scroll To top
+        self.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
     }
     
     // Call API to get Data
@@ -176,7 +197,7 @@ extension CollectionController {
             if Connectivity.isConnectedToInternet() {
                 self.callAPI()
             }else{
-                self.alert(title: "Error", message: "Not connected to the internet. Please check your internet connection.", preferredStyle: .alert) {_ in
+                self.alert(title: "Sorry!", message: "Not connected to the internet. Please check your internet connection.", preferredStyle: .alert) {_ in
                     self.reloadCollectionView()
                 }
             }
@@ -201,9 +222,9 @@ extension CollectionController {
             
             guard let self = self , let data = response else {return}
             
-            // MARK:- If you want infinity pagination you can replace "self.page >= 10" To "data.results?.count ?? 0 < self.per_page" to get a  infinity users..
+            // MARK:- If you want infinity pagination you can replace "self.page >= 5" To "data.results?.count ?? 0 < self.per_page" to get a  infinity users..
             // infinity pagination / max 100 users
-            if self.page >= 10 {
+            if self.page >= 5 {
                 // There are no other data! Stop pagination
                 self.isLimit = true
             }else{
@@ -218,14 +239,11 @@ extension CollectionController {
         }, returnError: {[weak self](error) in
             self?.view.stopLoading()
             // Show error message
-            self?.alert(title: "Error", message: error?.localizedDescription ?? "Ops, something went wrong try again later.", preferredStyle: .alert, completion:{_ in})
+            self?.alert(title: "Sorry!", message: error?.localizedDescription ?? "Ops, something went wrong try again later.", preferredStyle: .alert, completion:{_ in})
         })
     }
     
 }
-
-
-
 
 
 
@@ -287,13 +305,31 @@ extension CollectionController {
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.backgroundColor = .clear
-        collectionView.showsVerticalScrollIndicator = false
+        // add a bottom margin to collectionView
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 60, right: 0)
         
-        if let sliderFlowLayout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout{
-            sliderFlowLayout.itemSize = CGSize(width: (screenWidth - 16) / 2, height: 300)
-            sliderFlowLayout.minimumLineSpacing = 4
-            sliderFlowLayout.minimumInteritemSpacing = 4
-            sliderFlowLayout.sectionInset = UIEdgeInsets(top: 4, left: 4, bottom: 25, right: 6)
+        // Declare number of cells you want per row - Dynamic cells
+        if let flowLayout = collectionView?.collectionViewLayout as? UICollectionViewFlowLayout {
+            
+            var numberOfCellsPerRow: CGFloat = 2 // As a default
+            switch UIDevice.current.userInterfaceIdiom {
+            case .phone:
+                if flowLayout.scrollDirection == .vertical {
+                    numberOfCellsPerRow = 2
+                }else{
+                    numberOfCellsPerRow = 4
+                }
+                
+            case .pad:
+                numberOfCellsPerRow = 4
+                
+            default:
+                numberOfCellsPerRow = 2
+            }
+            
+            let horizontalSpacing = flowLayout.scrollDirection == .vertical ? flowLayout.minimumInteritemSpacing : flowLayout.minimumLineSpacing
+            let cellWidth = (view.frame.width - max(0, numberOfCellsPerRow - 1)*horizontalSpacing)/numberOfCellsPerRow
+            flowLayout.itemSize = CGSize(width: cellWidth, height: 300 /*'cellWidth' if you want be a dynamic*/)
         }
         
         // Set Search View
@@ -309,8 +345,18 @@ extension CollectionController {
         searchField.delegate = self
         searchField.textColor = Config.gray
         searchField.font = medium(Config.body)
-        searchField.attributedPlaceholder = NSAttributedString(string: "Search",
+        searchField.attributedPlaceholder = NSAttributedString(string: "Search...",
         attributes: [NSAttributedString.Key.foregroundColor: Config.gray ?? .gray ])
+        
+        // Set lblCurrentPage
+        view.addSubview(lblCurrentPage)
+        lblCurrentPage.isHidden = true
+        lblCurrentPage.layer.masksToBounds = true
+        lblCurrentPage.layer.cornerRadius = Config.cornerRadius
+        lblCurrentPage.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 0).isActive = true
+        lblCurrentPage.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20).isActive = true
+        lblCurrentPage.widthAnchor.constraint(equalToConstant: 80).isActive = true
+        lblCurrentPage.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
     }
     

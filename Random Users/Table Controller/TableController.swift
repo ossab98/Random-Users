@@ -17,6 +17,17 @@ class TableController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var searchImg: UIImageView!
     @IBOutlet weak var searchField: UITextField!
     
+    private let lblCurrentPage: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.backgroundColor = Config.orange
+        label.textColor = Config.darkGray
+        label.font = medium(Config.subhead)
+        label.textAlignment = NSTextAlignment.center
+        label.numberOfLines = 1
+        return label
+    }()
+    
     
     // MARK: - Properties / Models
     let networkHandler = NetworkHandler()
@@ -28,7 +39,7 @@ class TableController: UIViewController, UITextFieldDelegate {
     
     // Pagination variables
     var page: Int = 1
-    var per_page: Int = 10
+    var per_page: Int = 25
     var isLimit: Bool = false
     
     
@@ -44,11 +55,14 @@ class TableController: UIViewController, UITextFieldDelegate {
         super.viewWillAppear(animated)
         
         // Set Navigation Title
-        navigationItem.title = "Tabella"
+        navigationItem.title = "Table"
         navigationItem.backButtonTitle = " "
     }
     
-
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+    }
+    
 }
 
 
@@ -86,8 +100,15 @@ extension TableController: UITableViewDelegate, UITableViewDataSource, UIScrollV
         return 90
     }
     
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        //print("tableView", info.page ?? 0)
+    }
     
-    //MARK:- Pagination to get new data
+}
+
+
+//MARK:- Pagination to get new data - UIScrollView
+extension TableController {
     
     // Hide NavigationBar when scrolling
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -97,6 +118,9 @@ extension TableController: UITableViewDelegate, UITableViewDataSource, UIScrollV
             navigationController?.setNavigationBarHidden(false, animated: true)
         }
         
+        lblCurrentPage.isHidden = false
+        lblCurrentPage.text = "Page: \(info?.page ?? 1)"
+        print("scrollView Ciao", info.page ?? 0)
     }
     
     // scrollViewDidEndDragging
@@ -173,7 +197,8 @@ extension TableController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             self.refreshControl.endRefreshing()
         }
-        
+        // Scroll To top
+        self.tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
     }
     
     // Call API to get Data
@@ -207,9 +232,9 @@ extension TableController {
             
             guard let self = self , let data = response else {return}
             
-            // MARK:- If you want infinity pagination you can replace "self.page >= 10" To "data.results?.count ?? 0 < self.per_page" to get a  infinity users..
+            // MARK:- If you want infinity pagination you can replace "self.page >= 5" To "data.results?.count ?? 0 < self.per_page" to get a  infinity users..
             // infinity pagination / max 100 users
-            if self.page >= 10 {
+            if self.page >= 5 {
                 // There are no other data! Stop pagination
                 self.isLimit = true
             }else{
@@ -290,6 +315,8 @@ extension TableController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.backgroundColor = .clear
+        // add a bottom margin to tableview
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 60, right: 0)
         
         // Set Search View
         searchView.backgroundColor = Config.darkGray
@@ -304,9 +331,19 @@ extension TableController {
         searchField.delegate = self
         searchField.textColor = Config.gray
         searchField.font = medium(Config.body)
-        searchField.attributedPlaceholder = NSAttributedString(string: "Search",
+        searchField.attributedPlaceholder = NSAttributedString(string: "Search...",
         attributes: [NSAttributedString.Key.foregroundColor: Config.gray ?? .gray ])
         
+        // Set lblCurrentPage
+        view.addSubview(lblCurrentPage)
+        lblCurrentPage.isHidden = true
+        lblCurrentPage.layer.masksToBounds = true
+        lblCurrentPage.layer.cornerRadius = Config.cornerRadius
+        lblCurrentPage.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 0).isActive = true
+        lblCurrentPage.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20).isActive = true
+        lblCurrentPage.widthAnchor.constraint(equalToConstant: 80).isActive = true
+        lblCurrentPage.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
     }
-
+    
 }

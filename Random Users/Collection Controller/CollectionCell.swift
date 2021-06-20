@@ -77,7 +77,13 @@ class CollectionCell: UICollectionViewCell {
 extension CollectionCell{
     
     @objc func onCallPhoneTapped(sender: UIButton) {
-        collectionController?.callPhone(number: user?.phone ?? "")
+        if user?.phone != "" {
+            collectionController?.callPhone(number: user?.phone ?? "")
+        }else if user?.cell != "" {
+            collectionController?.callPhone(number: user?.cell ?? "")
+        }else{
+            collectionController.alert(title: "Sorry!", message: "Cannot found any number!" , preferredStyle: .alert) { _ in }
+        }
     }
     
     @objc func onSendEmailTapped(sender: UIButton) {
@@ -99,8 +105,8 @@ extension CollectionCell{
     }
     
     @objc func onOpenMapsTapped(sender: UIButton) {
-        let lan = user?.location?.coordinates?.latitude ?? ""
-        let lon = user?.location?.coordinates?.longitude ?? ""
+        let lan = Double(user?.location?.coordinates?.latitude ?? "") ?? 0
+        let lon = Double(user?.location?.coordinates?.longitude ?? "") ?? 0
         let location = "\(user.location?.street?.name ?? "") \(user.location?.street?.number ?? 0), \(user.location?.city ?? ""), \(user.location?.postcode ?? "") - \(user.location?.country ?? "")"
         collectionController?.openMapForLocation(location: (latitude: lan, longitude: lon), locationName: location)
     }

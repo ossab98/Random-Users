@@ -28,7 +28,7 @@ class HomeController: UIViewController {
         navigationItem.backButtonTitle = "Home"
         navigationController?.navigationBar.shadowImage = UIImage()
         navigationController?.navigationBar.backgroundColor = Config.darkBlue
-        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.font: semiBold(Config.title),
+        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.font: semiBold(Config.header),
         NSAttributedString.Key.foregroundColor : Config.white!]
     }
     
@@ -48,7 +48,6 @@ extension HomeController {
         // Push To CollectionController
         let collectionVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "collectionController") as! CollectionController
         self.navigationController?.pushViewController(collectionVC, animated: true)
-        
     }
     
 }

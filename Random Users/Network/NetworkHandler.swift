@@ -14,7 +14,7 @@ class NetworkHandler: NSObject {
     
     private func createRequest<T:Decodable>(method: HTTPMethod, urlPath: String, with decoded: T.Type, parameters: [String:Any]? = nil , returnWithData: @escaping(T?)->(), returnError: @escaping(Error?)->()){
         let urlRequest = Config.URL + urlPath
-        print("\(self.tag), \(urlRequest), Parameters: \(String(describing: parameters))")
+        //print("\(self.tag), \(urlRequest), Parameters: \(String(describing: parameters))")
         
         AF.request(urlRequest, method: method, parameters: parameters, encoding: JSONEncoding.default, headers: .none).responseDecodable(of: decoded){
             response in
@@ -23,7 +23,7 @@ class NetworkHandler: NSObject {
     }
     
     private func handleResponse<T:Decodable>(urlPath: String, response: DataResponse<T,AFError>, returnWithData: @escaping(T?)->(), returnError: @escaping(Error?)->()) {
-        print("\(urlPath), Response: \(String(describing: response.value))")
+        //print("\(urlPath), Response: \(String(describing: response.value))")
         switch response.result{
         case .success( _ ):
             guard let data = response.value else {

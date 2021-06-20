@@ -49,7 +49,7 @@ extension UIViewController: MFMailComposeViewControllerDelegate{
             present(mail, animated: true)
             
         }else{
-            print("Email cannot be sent")
+            alert(title: "Sorry!", message: "Email cannot be sent", preferredStyle: .alert) { _ in }
         }
     }
     

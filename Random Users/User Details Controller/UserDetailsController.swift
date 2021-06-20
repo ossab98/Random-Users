@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import MapKit
 
 class UserDetailsController: UITableViewController {
 
@@ -14,6 +15,7 @@ class UserDetailsController: UITableViewController {
     @IBOutlet weak var userPicture: UIImageView!
     @IBOutlet weak var userFullName: UILabel!
     @IBOutlet weak var userLocation: UILabel!
+    @IBOutlet weak var mapView: MKMapView!
     
     @IBOutlet weak var lblContactInfoHeader: UILabel!
     @IBOutlet weak var userEmail: UILabel!
@@ -32,7 +34,6 @@ class UserDetailsController: UITableViewController {
     // MARK: - Properties / Models
     var user: Results!
     
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -45,6 +46,9 @@ class UserDetailsController: UITableViewController {
         // Set Navigation Title
         navigationItem.title = "\(user?.name?.title ?? "") \(user?.name?.first ?? "")"
         navigationController?.setNavigationBarHidden(false, animated: true)
+        
+        // Show custom location with pin on Map with MapKit
+        ShowPin()
     }
     
 }
@@ -59,20 +63,15 @@ extension UserDetailsController{
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return 15
+        return 16
     }
     
-    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
         switch indexPath.row {
         case 3: // Location
-            let lan = user?.location?.coordinates?.latitude ?? ""
-            let lon = user?.location?.coordinates?.longitude ?? ""
-            let location = "\(user.location?.street?.name ?? "") \(user.location?.street?.number ?? 0), \(user.location?.city ?? ""), \(user.location?.postcode ?? "") - \(user.location?.country ?? "")"
-            openMapForLocation(location: (latitude: lan, longitude: lon), locationName: location)
+            ShowPin()
             
-        case 5: // Email
+        case 6: // Email
             let message = """
             \r\n\r\n\r\n\r\n
             This email created by 'Random Users App' \r\n
@@ -87,10 +86,10 @@ extension UserDetailsController{
             """
             sendEmail(user?.email ?? "", "Random Users App", message)
             
-        case 6: // Phone
+        case 7: // Phone
             callPhone(number: user?.phone ?? "")
             
-        case 7: // Cell
+        case 8: // Cell
             callPhone(number: user?.cell ?? "")
             
         default:
@@ -99,7 +98,81 @@ extension UserDetailsController{
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableView.automaticDimension
+        switch indexPath.row {
+        
+        case 3: // Location
+            let lan = Double(user?.location?.coordinates?.latitude ?? "") ?? 0
+            let lon = Double(user?.location?.coordinates?.longitude ?? "") ?? 0
+            if lan != 0 && lon != 0 {
+                return UITableView.automaticDimension
+            }else{
+                return 0
+            }
+            
+        case 6: // Email
+            if user?.email != "" {
+                return UITableView.automaticDimension
+            }else{
+                return 0
+            }
+            
+        case 7: // Phone
+            if user.phone != "" {
+                return UITableView.automaticDimension
+            }else{
+                return 0
+            }
+            
+        case 8: // Cell
+            if user.cell != "" {
+                return UITableView.automaticDimension
+            }else{
+                return 0
+            }
+            
+        default:
+            return UITableView.automaticDimension
+        }
+    }
+    
+}
+
+// MARK:- MKMapView
+extension UserDetailsController: MKMapViewDelegate {
+    
+    // show Pin in map
+    func showPinInMap(_ title: String, _ subtitle: String , _ latitude : Double, _ longitude: Double){
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        annotation.title = subtitle
+        annotation.subtitle = title
+        self.mapView.addAnnotation(annotation)
+        
+        let viewRegion = MKCoordinateRegion(center: annotation.coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+        self.mapView.setRegion(viewRegion, animated: true)
+    }
+    
+    //did select pin in mapKit
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        //print("annotation title == \(String(describing: view.annotation?.title!))")
+        let lan = Double(user?.location?.coordinates?.latitude ?? "") ?? 0
+        let lon = Double(user?.location?.coordinates?.longitude ?? "") ?? 0
+        if lan != 0 && lon != 0 {
+            let location = "\(user.location?.street?.name ?? "") \(user.location?.street?.number ?? 0), \(user.location?.city ?? ""), \(user.location?.postcode ?? "") - \(user.location?.country ?? "")"
+            openMapForLocation(location: (latitude: lan, longitude: lon), locationName: location)
+        }else{
+            alert(title: "Sorry!", message: "Location cannot be open", preferredStyle: .alert) {_ in}
+        }
+    }
+    
+    func ShowPin(){
+        let location = "\(user.location?.street?.name ?? "") \(user.location?.street?.number ?? 0), \(user.location?.city ?? ""), \(user.location?.postcode ?? "") - \(user.location?.country ?? "")"
+        let lan = Double(user?.location?.coordinates?.latitude ?? "") ?? 0
+        let lon = Double(user?.location?.coordinates?.longitude ?? "") ?? 0
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.showPinInMap(location, self.user?.location?.country ?? "", lan, lon)
+        }
     }
     
 }
@@ -112,6 +185,9 @@ extension UserDetailsController {
         
         // Set backgroundColor View
         view.backgroundColor = Config.white
+        
+        // add a bottom margin to tableview
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 60, right: 0)
         
         // Set lblPersonalInfoHeader
         lblPersonalInfoHeader.text = "Personal Information".uppercased()
@@ -136,9 +212,16 @@ extension UserDetailsController {
         // Set userLocation
         let location = "\(user.location?.street?.name ?? "") \(user.location?.street?.number ?? 0), \(user.location?.city ?? ""), \(user.location?.postcode ?? "") - \(user.location?.country ?? "")"
         userLocation.text = location
-        userLocation.textColor = Config.darkGray
-        userLocation.font = regular(Config.headline)
+        userLocation.textColor = Config.orange
+        userLocation.font = semiBold(Config.body)
         userLocation.numberOfLines = 0
+        
+        // Set mapView
+        mapView.delegate = self
+        mapView.layer.masksToBounds = true
+        mapView.layer.cornerRadius = Config.cornerRadius
+        mapView.layer.borderWidth = 1
+        mapView.layer.borderColor = Config.darkGray?.cgColor
         
         // Set lblContactInfoHeader
         lblContactInfoHeader.text = "Contact Information".uppercased()
@@ -146,10 +229,20 @@ extension UserDetailsController {
         lblContactInfoHeader.font = bold(Config.header)
         lblContactInfoHeader.numberOfLines = 0
         
+        // NSAttributedString For Button
+        let btnAttrs1Color = Config.white!
+        let btnAttrs1 : [NSAttributedString.Key : Any] = [
+            .foregroundColor : btnAttrs1Color,
+            .font: medium(Config.body)
+        ]
+        let btnAttrs2Color = Config.orange!
+        let btnAttrs2 : [NSAttributedString.Key : Any] = [
+            .foregroundColor : btnAttrs2Color,
+            .font: regular(Config.body)
+        ]
+        
         // Set userEmail
         let email = NSMutableAttributedString()
-        let btnAttrs1 = [NSAttributedString.Key.font : medium(Config.body), NSAttributedString.Key.foregroundColor : UIColor.white]
-        let btnAttrs2 = [NSAttributedString.Key.font : regular(Config.body), NSAttributedString.Key.foregroundColor : UIColor.orange]
         email.append(NSAttributedString(string: "Send email to:\r\n", attributes: btnAttrs1 ));
         email.append(NSAttributedString(string: "\(user.email?.uppercased() ?? "")", attributes: btnAttrs2 ))
         userEmail.attributedText = email
@@ -189,10 +282,20 @@ extension UserDetailsController {
         lblOtherInfoHeader.font = bold(Config.header)
         lblOtherInfoHeader.numberOfLines = 0
         
+        // NSAttributedString For label
+        let attrs1Color = Config.darkBlue!
+        let attrs1 : [NSAttributedString.Key : Any] = [
+            .foregroundColor : attrs1Color,
+            .font: semiBold(Config.headline)
+        ]
+        let attrs2Color = Config.orange!
+        let attrs2 : [NSAttributedString.Key : Any] = [
+            .foregroundColor : attrs2Color,
+            .font: semiBold(Config.body)
+        ]
+        
         // Set userName
         let logName = NSMutableAttributedString()
-        let attrs1 = [NSAttributedString.Key.font : semiBold(Config.headline), NSAttributedString.Key.foregroundColor : UIColor.black]
-        let attrs2 = [NSAttributedString.Key.font : medium(Config.headline), NSAttributedString.Key.foregroundColor : UIColor.orange]
         logName.append(NSAttributedString(string: "Username:  ".uppercased(), attributes: attrs1 ));
         logName.append(NSAttributedString(string: "\(user.login?.username?.uppercased() ?? "")", attributes: attrs2 ))
         userName.attributedText = logName

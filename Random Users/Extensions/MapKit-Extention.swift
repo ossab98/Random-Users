@@ -18,7 +18,7 @@ extension UIViewController {
     }
     
     // MARK: - Map Navigation
-    func openMapForLocation(location: (latitude: String, longitude: String), locationName: String ) {
+    func openMapForLocation(location: (latitude: Double, longitude: Double), locationName: String ) {
         let installedNavigationApps: [[String:String]] = [[NavigationApps.appleMaps.rawValue:""],[NavigationApps.googleMaps.rawValue:"comgooglemaps://"]]
         
         var alertAction: UIAlertAction?
@@ -49,7 +49,7 @@ extension UIViewController {
                     switch appName {
                     case NavigationApps.appleMaps.rawValue?:
                         let regionDistance: CLLocationDistance = 10000
-                        let coordinates = CLLocationCoordinate2DMake( Double(location.latitude) ?? 0.0, Double(location.longitude) ?? 0.0)
+                        let coordinates = CLLocationCoordinate2DMake( location.latitude, location.longitude)
                         let regionSpan = MKCoordinateRegion(center: coordinates, latitudinalMeters: regionDistance, longitudinalMeters: regionDistance)
                         let options = [
                             MKLaunchOptionsMapCenterKey: NSValue(mkCoordinate: regionSpan.center),
