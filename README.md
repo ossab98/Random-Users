@@ -15,6 +15,7 @@
 - [MessageUI](https://developer.apple.com/documentation/messageui)
 - [Infinite Scroll or Pagination](https://medium.com/hackernoon/implement-infinite-scroll-or-pagination-in-ios-uitableview-using-swift-5-67ea1c4d236)
 - [JSON](https://devacademy.it/json/)
+- [CocoaPods](https://cocoapods.org)
 - [Codable Models](https://learnappmaking.com/codable-json-swift-how-to/)
 - [Completion handler](https://medium.com/@dhavalkansara51/completion-handler-in-swift-with-escaping-and-nonescaping-closures-1ea717dc93a4)
 - [Async operation dispatchqueue](https://www.avanderlee.com/swift/asynchronous-operations/)
