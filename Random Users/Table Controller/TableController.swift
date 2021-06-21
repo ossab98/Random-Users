@@ -229,9 +229,9 @@ extension TableController {
             guard let self = self else {return}
             let data = response
             
-            // MARK:- If you want infinity pagination you can replace "self.page >= 5" To "data.results?.count ?? 0 < self.per_page" to get a  infinity users..
+            // MARK:- If you want infinity pagination you can replace "self.results.count >= 100" To "data.results?.count ?? 0 < self.per_page" to get a  infinity users..
             // infinity pagination / max 100 users
-            if self.page >= 5 {
+            if self.results.count >= 100 {
                 // There are no other data! Stop pagination
                 self.isLimit = true
             }else{
